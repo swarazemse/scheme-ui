@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SchemeSense AI</title>
+
+<style>
+body {
+  margin:0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #eef2ff, #ecfdf5);
+}
+
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+}
+
+.header {
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.header h1 {
+  margin:0;
+  color:#2563eb;
+}
+
+.header p {
+  color:#555;
+}
+
+.card {
+  background:white;
+  border-radius:16px;
+  padding:18px;
+  margin-bottom:15px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.08);
+  transition:0.2s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+}
+
+.card-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.card h3 {
+  margin:0;
+  font-size:20px;
+  color:#2563eb;
+}
+
+.desc {
+  margin:10px 0;
+  color:#333;
+}
+
+.reasons {
+  padding-left:18px;
+  color:#555;
+}
+
+.badge {
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:12px;
+  color:white;
+}
+
+.green { background:#16a34a; }
+.red { background:#dc2626; }
+
+.apply-btn {
+  margin-top:12px;
+  padding:10px 14px;
+  border:none;
+  border-radius:8px;
+  background:#2563eb;
+  color:white;
+  cursor:pointer;
+  font-weight:500;
+}
+
+.apply-btn:hover {
+  background:#1d4ed8;
+}
+
+.loading {
+  text-align:center;
+  color:#555;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <h1>SchemeSense AI</h1>
+    <p>Your personalized government schemes</p>
+  </div>
+
+  <div id="results" class="loading">Loading...</div>
+
+</div>
+
+<script>
+// 👉 Replace with your n8n webhook
+const webhook = "https://swara-zemse.app.n8n.cloud/webhook/scheme-recommend";
+
+// get inputs from URL
+const params = new URLSearchParams(window.location.search);
+const state = params.get("state");
+const occupation = params.get("occupation");
+const income = params.get("income");
+
+// fetch data
+fetch(`${webhook}?state=${state}&occupation=${occupation}&income=${income}`)
+  .then(res => res.json())
+  .then(data => {
+    const schemes = data.top_schemes || [];
+
+    if (!schemes.length) {
+      document.getElementById("results").innerHTML = "No schemes found.";
+      return;
+    }
+
+    let html = "";
+
+    schemes.forEach(s => {
+      html += `
+        <div class="card">
+
+          <div class="card-header">
+            <h3>${s.scheme_name}</h3>
+            <span class="badge ${s.eligibility ? "green" : "red"}">
+              ${s.eligibility ? "✔ Eligible" : "Not Eligible"}
+            </span>
+          </div>
+
+          <p class="desc">${s.explanation}</p>
+
+          <ul class="reasons">
+            ${(s.reasons || []).map(r => `<li>${r}</li>`).join("")}
+          </ul>
+
+          <button class="apply-btn">Apply Now</button>
+
+        </div>
+      `;
+    });
+
+    document.getElementById("results").innerHTML = html;
+  })
+  .catch(() => {
+    document.getElementById("results").innerHTML = "Error loading data";
+  });
+</script>
+
+</body>
+</html>
